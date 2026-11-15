@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RHD-Biomarker · 罕见血液病生物标志物证据库 v1.0</title>
+<style>
+  :root{
+    --bg:#f6f8fb; --panel:#ffffff; --ink:#1b2330; --muted:#6b7688;
+    --line:#e3e8f0; --brand:#1f5fa9; --brand-soft:#eaf1fa; --warn:#b45309;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"Segoe UI","Microsoft YaHei",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+  header{background:linear-gradient(135deg,#1f5fa9,#2f8fb8);color:#fff;padding:26px 24px 20px}
+  header h1{margin:0 0 6px;font-size:22px;font-weight:600}
+  header p{margin:0;opacity:.92;font-size:13px}
+  .stats{display:flex;gap:26px;margin-top:14px;flex-wrap:wrap}
+  .stat b{font-size:20px;font-weight:600}
+  .stat span{display:block;font-size:12px;opacity:.85}
+  main{max-width:1280px;margin:0 auto;padding:18px 18px 60px}
+  .filters{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;
+           grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px 14px}
+  .field{display:flex;flex-direction:column;gap:5px;min-width:0}
+  .field label{font-size:12px;color:var(--muted)}
+  .field select,.field input{width:100%;padding:8px 9px;border:1px solid var(--line);border-radius:7px;background:#fff;
+           color:var(--ink);font-size:13px;outline:none}
+  .field select:focus,.field input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+  .bar{display:flex;align-items:center;justify-content:space-between;margin:14px 2px 8px;gap:12px;flex-wrap:wrap}
+  .count{color:var(--muted);font-size:13px}
+  .count b{color:var(--brand);font-size:15px}
+  button{font:inherit;cursor:pointer;border-radius:7px;border:1px solid var(--line);background:#fff;padding:7px 12px;color:var(--ink)}
+  button:hover{border-color:var(--brand);color:var(--brand)}
+  button.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+  button.primary:hover{background:#174c8a;color:#fff}
+  .tablewrap{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:auto}
+  table{width:100%;border-collapse:collapse;min-width:900px}
+  thead th{position:sticky;top:0;background:#f0f4fa;text-align:left;font-weight:600;font-size:12px;color:#31405a;
+           padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  tbody td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;font-size:13px}
+  tbody tr{cursor:pointer}
+  tbody tr:hover{background:#f7fafd}
+  td.bm{font-weight:600;color:#123a63}
+  .tag{display:inline-block;padding:1px 7px;border-radius:999px;background:var(--brand-soft);color:var(--brand);font-size:11.5px}
+  .tag.gray{background:#eef1f5;color:#5b6678}
+  .tag.warn{background:#fdf0e0;color:var(--warn)}
+  .pager{display:flex;gap:8px;align-items:center;justify-content:center;margin:16px 0;flex-wrap:wrap}
+  .pager span{color:var(--muted);font-size:13px}
+  .modal{position:fixed;inset:0;background:rgba(16,24,38,.55);display:none;align-items:flex-start;justify-content:center;
+         padding:40px 16px;overflow:auto;z-index:50}
+  .modal.open{display:flex}
+  .card{background:#fff;border-radius:12px;max-width:900px;width:100%;padding:22px 24px;box-shadow:0 18px 50px rgba(10,20,40,.25)}
+  .card h2{margin:0 0 4px;font-size:19px;line-height:1.35}
+  .card .sub{color:var(--muted);font-size:12.5px;margin-bottom:14px}
+  .kv{display:grid;grid-template-columns:150px 1fr;gap:6px 14px;font-size:13px}
+  .kv .k{color:var(--muted)}
+  .kv .v{word-break:break-word}
+  .quote{background:#f7faf7;border-left:3px solid #3a8f5a;padding:10px 12px;border-radius:0 7px 7px 0;margin-top:6px;
+         font-size:13px;line-height:1.6;color:#22352a}
+  .close{float:right;border:none;background:#eef1f5;border-radius:8px;padding:6px 10px}
+  footer{color:var(--muted);font-size:12px;text-align:center;padding:20px}
+  @media (max-width:640px){ header h1{font-size:18px} .kv{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<header>
+  <h1>RHD-Biomarker · 罕见血液病生物标志物证据库</h1>
+  <p>文献整理型、证据级数据库 ｜ Version 1.0（冻结于 2026-10-29）</p>
+  <div class="stats">
+    <div class="stat"><b>4,831</b><span>证据记录</span></div>
+    <div class="stat"><b>636</b><span>文献（唯一 PMID）</span></div>
+    <div class="stat"><b>45</b><span>疾病标签</span></div>
+    <div class="stat"><b>1975–2026</b><span>发表年份</span></div>
+  </div>
+</header>
+
+<main>
+  <section class="filters">
+    <div class="field">
+      <label>关键词（标志物 / 疾病 / PMID / 原文引文）</label>
+      <input id="q" type="search" placeholder="例如：ADAMTS13、ferritin、32194036">
+    </div>
+    <div class="field"><label>疾病</label><select id="disease"></select></div>
+    <div class="field"><label>标志物类型</label><select id="bmtype"></select></div>
+    <div class="field"><label>靶标类别</label><select id="target"></select></div>
+    <div class="field"><label>证据来源</label><select id="source"></select></div>
+    <div class="field"><label>人工复核</label><select id="review"></select></div>
+    <div class="field"><label>起始年份</label><input id="y1" type="number" min="1975" max="2026" placeholder="1975"></div>
+    <div class="field"><label>截止年份</label><input id="y2" type="number" min="1975" max="2026" placeholder="2026"></div>
+    <div class="field"><label>排序</label><select id="sort">
+      <option value="year_desc">年份（新→旧）</option>
+      <option value="year_asc">年份（旧→新）</option>
+      <option value="disease">疾病名</option>
+      <option value="biomarker">生物标志物</option>
+    </select></div>
+  </section>
+
+  <div class="bar">
+    <div class="count">命中 <b id="hit">0</b> 条记录</div>
+    <div>
+      <button id="reset">清空筛选</button>
+      <button class="primary" id="dl">下载完整数据（CSV）</button>
+    </div>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr>
+        <th style="width:15%">疾病</th><th style="width:19%">生物标志物</th>
+        <th style="width:12%">靶标类别</th><th style="width:12%">类型</th>
+        <th style="width:11%">标本</th><th style="width:7%">年份</th><th style="width:9%">PMID</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <div class="pager">
+    <button id="prev">上一页</button>
+    <span id="pageinfo"></span>
+    <button id="next">下一页</button>
+  </div>
+</main>
+
+<div class="modal" id="modal"><div class="card" id="card"></div></div>
+
+<footer>
+  <div style="max-width:820px;margin:0 auto 10px;line-height:1.9">
+    <b>引用格式</b>：Shang Y, Shen B. RHD-Biomarker: a literature-curated, evidence-level biomarker database for rare
+    hematologic diseases. <i>Database</i> (Oxford) 2026; version 1.0.
+    &nbsp;·&nbsp; <b>数据许可</b>：CC BY 4.0
+  </div>
+  RHD-Biomarker v1.0 · 4,831 条证据记录 / 636 篇文献 / 45 个疾病标签 · 数据来源：Biomarker_Database
+  · 联系方式：尚亚可（四川大学华西医院）· 最后更新：2026-10-29
+</footer>
+
+<script src="data.js"></script>
+<script>
+const DATA = window.RHD_DATA || [];
+const PAGE = 50;
+const state = { page: 1, filtered: DATA };
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const LABELS = {
+  "Disease Name": "疾病", "Biomarker Name": "生物标志物", "Normalized Biomarker Name": "标准化名称",
+  "Target Category": "靶标类别", "Biomarker Type": "标志物类型", "Detection Object": "检测对象",
+  "Biological Material": "生物材料", "Sample Type": "标本类型", "Assay Method": "检测方法",
+  "Comparison Groups": "比较组", "Clinical Outcome": "临床结局", "Association Direction": "关联方向",
+  "Effect Measure": "效应指标", "Effect Value": "效应值", "P Value": "P 值",
+  "Confidence Interval": "置信区间", "Multivariable Result": "多因素分析", "Diagnostic Performance": "诊断效能",
+  "Cutoff Value": "截断值", "Sensitivity": "灵敏度", "Specificity": "特异度", "AUC": "AUC",
+  "Validation Status": "验证状态", "Main Conclusion CN": "主要结论（原文整理）",
+  "Evidence Quote": "证据引文", "Evidence Location": "证据位置", "Source Type": "证据来源",
+  "Manual Review Required": "需人工复核", "Manual Review Reason": "复核原因",
+  "region_or_country": "国家/地区", "pediatric_adult_group": "年龄组", "total_sample_size": "样本量",
+  "Journal": "期刊", "Title": "题名", "Study Type": "研究类型", "Year": "年份", "PMID": "PMID"
+};
+
+function uniq(key) {
+  const s = new Set();
+  DATA.forEach((r) => { const v = String(r[key] || "").trim(); if (v) s.add(v); });
+  return [...s].sort((a, b) => a.localeCompare(b, "zh"));
+}
+
+function fillSelect(id, key, label) {
+  const el = $(id);
+  el.innerHTML = '<option value="">全部' + (label || "") + "</option>" +
+    uniq(key).map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
+}
+
+function initFilters() {
+  fillSelect("disease", "Disease Name", "疾病");
+  fillSelect("bmtype", "Biomarker Type", "类型");
+  fillSelect("target", "Target Category", "类别");
+  fillSelect("source", "Source Type");
+  fillSelect("review", "Manual Review Required");
+}
+
+function apply() {
+  const q = $("q").value.trim().toLowerCase();
+  const d = $("disease").value, t = $("bmtype").value, g = $("target").value;
+  const s = $("source").value, r = $("review").value;
+  const y1 = parseInt($("y1").value, 10), y2 = parseInt($("y2").value, 10);
+
+  state.filtered = DATA.filter((x) => {
+    if (d && x["Disease Name"] !== d) return false;
+    if (t && x["Biomarker Type"] !== t) return false;
+    if (g && x["Target Category"] !== g) return false;
+    if (s && x["Source Type"] !== s) return false;
+    if (r && String(x["Manual Review Required"]) !== r) return false;
+    const y = parseInt(x["Year"], 10);
+    if (!isNaN(y1) && y < y1) return false;
+    if (!isNaN(y2) && y > y2) return false;
+    if (q) {
+      const blob = [x["Biomarker Name"], x["Normalized Biomarker Name"], x["Disease Name"], x["PMID"],
+        x["Title"], x["Clinical Outcome"], x["Evidence Quote"], x["Assay Method"],
+        x["Main Conclusion CN"]].join(" ").toLowerCase();
+      if (!blob.includes(q)) return false;
+    }
+    return true;
+  });
+  const mode = $("sort").value;
+  const by = {
+    year_desc: (a, b) => (b["Year"] || 0) - (a["Year"] || 0),
+    year_asc: (a, b) => (a["Year"] || 0) - (b["Year"] || 0),
+    disease: (a, b) => String(a["Disease Name"]).localeCompare(String(b["Disease Name"]), "en") ||
+      (b["Year"] || 0) - (a["Year"] || 0),
+    biomarker: (a, b) => String(a["Biomarker Name"]).localeCompare(String(b["Biomarker Name"]), "en")
+  };
+  state.filtered.sort(by[mode] || by.year_desc);
+  state.page = 1;
+  render();
+}
+
+function row(x) {
+  return `<tr data-i="${x.__i}">
+    <td>${esc(x["Disease Name"])}</td>
+    <td class="bm">${esc(x["Biomarker Name"] || x["Normalized Biomarker Name"])}</td>
+    <td><span class="tag gray">${esc(x["Target Category"])}</span></td>
+    <td><span class="tag">${esc(x["Biomarker Type"])}</span></td>
+    <td>${esc(x["Biological Material"] || x["Sample Type"]).slice(0, 40)}</td>
+    <td>${esc(x["Year"])}</td>
+    <td>${esc(x["PMID"])}</td>
+  </tr>`;
+}
+
+function render() {
+  $("hit").textContent = state.filtered.length.toLocaleString();
+  const pages = Math.max(1, Math.ceil(state.filtered.length / PAGE));
+  if (state.page > pages) state.page = pages;
+  const start = (state.page - 1) * PAGE;
+  const slice = state.filtered.slice(start, start + PAGE);
+  $("rows").innerHTML = slice.map(row).join("") ||
+    '<tr><td colspan="7" style="text-align:center;color:#8b95a5;padding:34px">没有匹配的记录</td></tr>';
+  $("pageinfo").textContent = `第 ${state.page} / ${pages} 页`;
+  $("prev").disabled = state.page <= 1;
+  $("next").disabled = state.page >= pages;
+}
+
+function detail(x) {
+  const order = ["PMID", "Title", "Journal", "Year", "Study Type", "Disease Name", "region_or_country",
+    "pediatric_adult_group", "total_sample_size", "Biomarker Name", "Normalized Biomarker Name",
+    "Target Category", "Biomarker Type", "Detection Object", "Biological Material", "Sample Type",
+    "Assay Method", "Comparison Groups", "Clinical Outcome", "Association Direction",
+    "Effect Measure", "Effect Value", "P Value", "Confidence Interval", "Multivariable Result",
+    "Diagnostic Performance", "Cutoff Value", "Sensitivity", "Specificity", "AUC",
+    "Validation Status", "Main Conclusion CN"];
+  const rows = order.filter((k) => x[k] !== "" && x[k] != null)
+    .map((k) => `<div class="k">${esc(LABELS[k] || k)}</div><div class="v">${esc(x[k])}</div>`).join("");
+  const quote = x["Evidence Quote"]
+    ? `<div style="margin-top:14px"><div class="k" style="color:#6b7688;font-size:12px">${esc(LABELS["Evidence Quote"])} · ${esc(x["Evidence Location"] || "")}</div>
+       <div class="quote">${esc(x["Evidence Quote"])}</div></div>` : "";
+  const flag = String(x["Manual Review Required"]).toLowerCase() === "yes"
+    ? `<div style="margin-top:12px"><span class="tag warn">需人工复核</span>
+       <span style="color:#6b7688;font-size:12.5px;margin-left:6px">${esc(x["Manual Review Reason"] || "")}</span></div>` : "";
+  $("card").innerHTML = `<button class="close" onclick="closeModal()">关闭 ✕</button>
+    <h2>${esc(x["Biomarker Name"] || x["Normalized Biomarker Name"])}</h2>
+    <div class="sub">${esc(x["Disease Name"])} ｜ PMID ${esc(x["PMID"])} ｜ ${esc(x["Year"])}</div>
+    <div class="kv">${rows}</div>${quote}${flag}`;
+  $("modal").classList.add("open");
+}
+function closeModal() { $("modal").classList.remove("open"); }
+
+function boot() {
+  initFilters();
+  DATA.forEach((x, i) => { x.__i = i; });
+  apply();
+  $("q").addEventListener("input", (() => { let t; return () => { clearTimeout(t); t = setTimeout(apply, 180); }; })());
+  ["disease", "bmtype", "target", "source", "review", "y1", "y2", "sort"].forEach((id) =>
+    $(id).addEventListener("change", apply));
+  $("reset").onclick = () => {
+    ["q", "y1", "y2"].forEach((id) => ($(id).value = ""));
+    ["disease", "bmtype", "target", "source", "review"].forEach((id) => ($(id).value = ""));
+    $("sort").value = "year_desc";
+    apply();
+  };
+  $("dl").onclick = () => { window.location.href = "rhd-biomarker-v1.0.csv"; };
+  $("prev").onclick = () => { if (state.page > 1) { state.page--; render(); window.scrollTo({ top: 300 }); } };
+  $("next").onclick = () => {
+    if (state.page < Math.ceil(state.filtered.length / PAGE)) { state.page++; render(); window.scrollTo({ top: 300 }); }
+  };
+  $("rows").addEventListener("click", (e) => {
+    const tr = e.target.closest("tr[data-i]");
+    if (tr) detail(DATA[parseInt(tr.dataset.i, 10)]);
+  });
+  $("modal").addEventListener("click", (e) => { if (e.target.id === "modal") closeModal(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+}
+boot();
+</script>
+</body>
+</html>
